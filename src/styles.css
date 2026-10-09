@@ -98,7 +98,7 @@
 
 /* In-booth quick help dialog */
 .booth-help-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;flex-shrink:0;border:1px solid #c66b4d70;background:transparent;color:var(--ink,#292720);padding:10px 13px;min-height:42px;font:10px var(--mono);letter-spacing:.5px;transition:background .2s,color .2s,transform .2s}
-.booth-help-button>span{display:grid;place-items:center;width:20px;height:20px;border:1px solid currentColor;border-radius:50%;font:500 13px var(--sans)}
+.booth-help-button>span{display:grid;place-items:center;width:20px;height:20px;border:1px solid currentColor;border-radius:50%;font:500 13px 'DM Sans',sans-serif}
 .booth-help-button:hover{background:#c66b4d;color:#fff8ec;transform:translateY(-2px)}
 .help-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:#171510b8;backdrop-filter:blur(6px);animation:ag-rise-in .18s ease both}
 .help-dialog{position:relative;width:min(100%,560px);max-height:min(90dvh,820px);overflow:auto;background:#eee6d7;color:#292720;padding:clamp(23px,5vw,42px);box-shadow:0 24px 90px #0005;border:1px solid #ffffff80;animation:ag-film-reveal .28s cubic-bezier(.2,.75,.25,1) both}
