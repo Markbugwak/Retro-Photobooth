@@ -13,7 +13,6 @@ const FRAMES = [
   { id: 'kraft', name: 'Kraft paper' },
   { id: 'none', name: 'No frame' },
 ]
-const FILTERS_BY_ID = Object.fromEntries(FILTERS.map(function (item) { return [item.id, item] }))
 
 function applyFilter(imageData, filter) {
   const data = imageData.data
@@ -195,7 +194,7 @@ export default function App() {
     rawCanvas.height = canvas.height
     rawCanvas.getContext('2d').drawImage(canvas, 0, 0)
     const src = filterImageData(rawCanvas, filter)
-    const photo = { id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8), src: src }
+    const photo = { id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8), src: src, rawSrc: rawCanvas.toDataURL('image/jpeg', 0.94) }
     setPhotos(function (current) {
       if (current.length >= slots) return current
       return current.concat(photo)
@@ -295,7 +294,7 @@ export default function App() {
           if (facing === 'user' && mirrorSaved) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1) }
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
           const src = filterImageData(canvas, filter)
-          setPhotos(function (current) { return current.map(function (photo, index) { return index === targetIndex ? { id: photo.id, src: src } : photo }) })
+          setPhotos(function (current) { return current.map(function (photo, index) { return index === targetIndex ? { id: photo.id, src: src, rawSrc: canvas.toDataURL('image/jpeg', 0.94) } : photo }) })
           setFlash(true)
           later(function () { setFlash(false) }, 140)
           setCountdown(null); setShooting(false); captureLockRef.current = false
@@ -335,7 +334,28 @@ export default function App() {
     const backgrounds = { film: '#25231e', polaroid: '#f5f0e5', kraft: '#c3a57e', none: '#25231e' }
     ctx.fillStyle = backgrounds[frame]
     ctx.fillRect(0, 0, width, height)
-    const drawPhoto = function (photo, index) {
+    const drawPhoto = function (index) {
+      if (index >= photos.length) {
+        if (caption.trim()) {
+          ctx.fillStyle = frame === 'film' || frame === 'none' ? '#e8dfc9' : '#37312a'
+          ctx.textAlign = 'center'
+          ctx.font = '500 18px monospace'
+          ctx.fillText(caption.trim().slice(0, 48), width / 2, height - 30, width - 30)
+        }
+        if (frame === 'film') {
+          ctx.fillStyle = '#e8dfc9'
+          ctx.textAlign = 'center'
+          ctx.font = '10px monospace'
+          ctx.fillText('AFTERGLOW  •  400 ISO  •  ' + new Date().toLocaleDateString(), width / 2, height - 8, width - 30)
+        }
+        const link = document.createElement('a')
+        link.download = 'afterglow-photobooth.' + type
+        link.href = canvas.toDataURL(type === 'jpeg' ? 'image/jpeg' : 'image/png', 0.95)
+        link.click()
+        setNotice('Your strip is ready to keep.')
+        return
+      }
+      const photo = photos[index]
       const img = new Image()
       img.onload = function () {
         const y = pad + index * (photoHeight + gap)
@@ -349,28 +369,12 @@ export default function App() {
             ctx.fillRect(width - 14, cy, hole, 12)
           }
         }
-        if (index === photos.length - 1) {
-          if (caption.trim()) {
-            ctx.fillStyle = frame === 'film' ? '#e8dfc9' : frame === 'none' ? '#e8dfc9' : '#37312a'
-            ctx.textAlign = 'center'
-            ctx.font = '500 18px "DM Mono", monospace'
-            ctx.fillText(caption.trim().slice(0, 48), width / 2, height - 30, width - 30)
-          }
-          if (frame === 'film') {
-            ctx.fillStyle = '#e8dfc9'
-            ctx.font = '10px monospace'
-            ctx.fillText('AFTERGLOW  •  400 ISO  •  ' + new Date().toLocaleDateString(), width / 2, height - captionHeight + 1, width - 30)
-          }
-          const link = document.createElement('a')
-          link.download = 'afterglow-photobooth.' + type
-          link.href = canvas.toDataURL(type === 'jpeg' ? 'image/jpeg' : 'image/png', 0.95)
-          link.click()
-          setNotice('Your strip is ready to keep.')
-        }
+        drawPhoto(index + 1)
       }
+      img.onerror = function () { setNotice('One photo could not be prepared. Please try downloading again.') }
       img.src = photo.src
     }
-    photos.forEach(drawPhoto)
+    drawPhoto(0)
   }
 
   const shareStrip = async function () {
@@ -450,7 +454,7 @@ export default function App() {
             <div className="camera-card">
               <div className="card-topline"><span><i className={cameraOn ? 'status-dot live' : 'status-dot'} /> {cameraOn ? 'CAMERA IS READY' : 'CAMERA STANDBY'}</span><span>YOUR PHOTOS STAY ON THIS DEVICE</span></div>
               <div className="viewfinder">
-                <video ref={videoRef} autoPlay playsInline muted className={'live-video ' + (facing === 'user' ? 'mirror' : '')} style={{ display: cameraOn ? 'block' : 'none' }} />
+                <video ref={videoRef} autoPlay playsInline muted className={'live-video ' + (facing === 'user' ? 'mirror' : '')} style={{ display: cameraOn ? 'block' : 'none', filter: filter === 'mono' ? 'grayscale(1) contrast(1.08)' : filter === 'vintage' ? 'sepia(.38) contrast(.92) saturate(.82)' : filter === 'golden' ? 'sepia(.22) saturate(1.35) hue-rotate(-8deg) brightness(1.04)' : filter === 'blue' ? 'saturate(.8) hue-rotate(160deg) contrast(1.04)' : 'none' }} />
                 {!cameraOn && <div className="camera-placeholder"><div className="placeholder-camera">◎</div><p>YOUR NEXT FAVORITE PHOTO<br />STARTS RIGHT HERE.</p><span>ALLOW CAMERA ACCESS TO BEGIN</span></div>}
                 <div className="viewfinder-corners"><i/><i/><i/><i/></div><div className="viewfinder-label">AFTERGLOW / LIVE VIEW</div><div className="viewfinder-counter">{String(photos.length).padStart(2, '0')} <span>/ {String(slots).padStart(2, '0')}</span></div>
                 {flash && <div className="capture-flash" aria-hidden="true" />}
@@ -470,7 +474,7 @@ export default function App() {
             <aside className="control-panel">
               <div className="panel-header"><span>MAKE IT YOURS</span><span className="panel-number">{photos.length} / {slots}</span></div>
               <div className="control-group"><div className="control-title"><span>PHOTO STRIP</span><span>CHOOSE A SIZE</span></div><div className="choice-row">{[2, 3, 4].map(function (count) { return <button key={count} aria-pressed={slots === count} className={slots === count ? 'choice active' : 'choice'} onClick={function () { chooseSlots(count) }}>{count} photos</button> })}</div></div>
-              <div className="control-group"><div className="control-title"><span>FILM MOOD</span><span>CHOOSE YOUR TONE</span></div><div className="filter-grid">{FILTERS.map(function (item) { return <button key={item.id} aria-pressed={filter === item.id} className={filter === item.id ? 'filter-choice active' : 'filter-choice'} onClick={function () { setFilter(item.id); setPhotos(function (current) { return current.map(function (photo) { return { id: photo.id, src: photo.rawSrc ? filterImageData(dataUrlToImage(photo.rawSrc), item.id) : photo.src, rawSrc: photo.rawSrc } }) }) }}><span className={'filter-swatch swatch-' + item.id}><span>Ag</span></span><span>{item.name}</span></button> })}</div></div>
+              <div className="control-group"><div className="control-title"><span>FILM MOOD</span><span>CHOOSE YOUR TONE</span></div><div className="filter-grid">{FILTERS.map(function (item) { return <button key={item.id} aria-pressed={filter === item.id} className={filter === item.id ? 'filter-choice active' : 'filter-choice'} onClick={function () { setFilter(item.id) }}><span className={'filter-swatch swatch-' + item.id}><span>Ag</span></span><span>{item.name}</span></button> })}</div></div>
               <div className="control-group"><div className="control-title"><span>FRAME STYLE</span><span>MAKE IT YOURS</span></div><div className="frame-options">{FRAMES.map(function (item) { return <button key={item.id} aria-pressed={frame === item.id} className={frame === item.id ? 'frame-choice active' : 'frame-choice'} onClick={function () { setFrame(item.id) }}><span className={'frame-swatch frame-' + item.id}><i/><i/><i/></span><span>{item.name}</span></button> })}</div></div>
               <div className="control-group caption-group"><label className="control-title" htmlFor="caption"><span>YOUR CAPTION</span><span>OPTIONAL</span></label><input id="caption" value={caption} maxLength={48} onChange={function (e) { setCaption(e.target.value) }} placeholder="A little moment, forever." /></div>
               <div className="control-group mirror-control"><label><input type="checkbox" checked={mirrorSaved} onChange={function (e) { setMirrorSaved(e.target.checked) }} /> Save selfies mirrored</label></div>
