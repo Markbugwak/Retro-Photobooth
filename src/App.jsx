@@ -488,6 +488,21 @@ export default function App() {
           <div className="hero-bottom"><span>MADE OF MOMENTS</span><span>NO ACCOUNT. NO UPLOADS.</span><span>↓ MAKE YOUR STRIP</span></div>
         </section>
 
+        <section className="how-to-section" id="how-to" aria-labelledby="how-to-title">
+          <div className="how-to-heading">
+            <p className="eyebrow">✳ NEW HERE? START WITH THE BASICS</p>
+            <h2 id="how-to-title">Your first roll, <em>made easy.</em></h2>
+            <p>Four little steps between you and a keepsake worth keeping.</p>
+          </div>
+          <div className="how-to-grid">
+            <article className="how-to-step"><span className="how-to-number">01</span><span className="how-to-icon">◎</span><h3>Set the scene</h3><p>Find a bright spot, place your device steadily, and gather everyone in the frame.</p></article>
+            <article className="how-to-step"><span className="how-to-number">02</span><span className="how-to-icon">▣</span><h3>Allow your camera</h3><p>Tap <strong>Turn On Camera</strong> and allow access when your browser asks. If blocked, check the site’s camera permission and retry.</p></article>
+            <article className="how-to-step"><span className="how-to-number">03</span><span className="how-to-icon">✳</span><h3>Make it yours</h3><p>Pick a film mood, frame style, strip size, and optional caption. Choose a countdown, then tap <strong>Start Photo Sequence</strong>.</p></article>
+            <article className="how-to-step"><span className="how-to-number">04</span><span className="how-to-icon">↻</span><h3>Keep the good stuff</h3><p>Retake or remove any photo, then download your finished strip. Your photos stay on your device unless you choose to share them.</p></article>
+          </div>
+          <div className="how-to-footer"><span><strong>Little tip:</strong> Auto-take remaining photos is on by default. Turn it off if you want to take one photo at a time.</span><button className="how-to-jump" onClick={function () { scrollToBooth(false) }}>LET’S MAKE A STRIP <span>↓</span></button></div>
+        </section>
+
         <section className="booth-section" id="booth">
           <div className="section-heading"><div><p className="eyebrow">✳ YOUR VERY OWN LITTLE PHOTO STUDIO</p><h2>Come on in<span>.</span></h2></div><p className="section-note">Find the light. Gather your people.<br />The best photos are never planned.</p></div>
           <div className="booth-layout">
