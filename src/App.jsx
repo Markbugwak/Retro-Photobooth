@@ -87,6 +87,7 @@ export default function App() {
   const [downloadType, setDownloadType] = useState('png')
   const [confirmReset, setConfirmReset] = useState(false)
   const [mirrorSaved, setMirrorSaved] = useState(true)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const clearTimers = useCallback(function () {
     timersRef.current.forEach(function (timer) { window.clearTimeout(timer) })
@@ -504,7 +505,24 @@ export default function App() {
         </section>
 
         <section className="booth-section" id="booth">
-          <div className="section-heading"><div><p className="eyebrow">✳ YOUR VERY OWN LITTLE PHOTO STUDIO</p><h2>Come on in<span>.</span></h2></div><p className="section-note">Find the light. Gather your people.<br />The best photos are never planned.</p></div>
+          <div className="section-heading"><div><p className="eyebrow">✳ YOUR VERY OWN LITTLE PHOTO STUDIO</p><h2>Come on in<span>.</span></h2></div><p className="section-note">Find the light. Gather your people.<br />The best photos are never planned.</p><button className="booth-help-button" onClick={function () { setHelpOpen(true) }} aria-haspopup="dialog" aria-expanded={helpOpen}><span>?</span> HOW TO USE</button></div>
+          {helpOpen && <div className="help-backdrop" onClick={function (event) { if (event.target === event.currentTarget) setHelpOpen(false) }}>
+            <section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+              <button className="help-close" onClick={function () { setHelpOpen(false) }} aria-label="Close help guide">×</button>
+              <p className="eyebrow">✳ A LITTLE HELP, RIGHT HERE</p>
+              <h3 id="help-title">Your quick-start guide<span>.</span></h3>
+              <p className="help-intro">No fuss. Just follow these steps and make a little memory.</p>
+              <ol className="help-steps">
+                <li><span>01</span><div><strong>Turn on your camera</strong><p>Tap <b>Turn On Camera</b> and allow camera permission in your browser.</p></div></li>
+                <li><span>02</span><div><strong>Choose your look</strong><p>Pick a film mood, frame, strip size, and optional caption from the controls.</p></div></li>
+                <li><span>03</span><div><strong>Get into position</strong><p>Check the live preview, find good light, then choose a 3, 5, or 10-second countdown.</p></div></li>
+                <li><span>04</span><div><strong>Take your photos</strong><p>Tap <b>Start Photo Sequence</b>. Auto-take captures the remaining frames; turn it off to take one at a time.</p></div></li>
+                <li><span>05</span><div><strong>Save your keepsake</strong><p>Use ↻ to retake or × to remove a frame, then download your finished strip.</p></div></li>
+              </ol>
+              <div className="help-note"><strong>Good to know</strong><p>Your photos stay in this browser on your device. Download your strip before closing or refreshing the page to keep a copy.</p></div>
+              <button className="primary-button help-done" onClick={function () { setHelpOpen(false) }}>GOT IT — LET’S GO <span>↗</span></button>
+            </section>
+          </div>}
           <div className="booth-layout">
             <div className="camera-card">
               <div className="card-topline"><span><i className={cameraOn ? 'status-dot live' : 'status-dot'} /> {cameraOn ? 'CAMERA IS READY' : 'CAMERA STANDBY'}</span><span>YOUR PHOTOS STAY ON THIS DEVICE</span></div>
