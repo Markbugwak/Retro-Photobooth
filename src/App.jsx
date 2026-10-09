@@ -88,6 +88,11 @@ export default function App() {
   const [confirmReset, setConfirmReset] = useState(false)
   const [mirrorSaved, setMirrorSaved] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [feedbackRating, setFeedbackRating] = useState(5)
+  const [feedbackType, setFeedbackType] = useState('Suggestion')
+  const [feedbackMessage, setFeedbackMessage] = useState('')
+  const [feedbackName, setFeedbackName] = useState('')
+  const [feedbackError, setFeedbackError] = useState('')
 
   const clearTimers = useCallback(function () {
     timersRef.current.forEach(function (timer) { window.clearTimeout(timer) })
@@ -462,6 +467,32 @@ export default function App() {
     if (start && !cameraOn) later(function () { startCamera() }, 350)
   }
 
+  const submitFeedback = function (event) {
+    event.preventDefault()
+    const message = feedbackMessage.trim()
+    if (!message) {
+      setFeedbackError('Please share a review or suggestion before sending.')
+      return
+    }
+    const title = '[' + feedbackType + '] Afterglow photobooth feedback'
+    const body = [
+      '## Afterglow user feedback',
+      '',
+      '- Type: ' + feedbackType,
+      '- Rating: ' + feedbackRating + '/5',
+      '- Name (optional): ' + (feedbackName.trim() || 'Anonymous'),
+      '',
+      '## Review or suggestion',
+      message,
+      '',
+      '## Context',
+      'Please describe any issue or idea that could improve the photobooth.'
+    ].join('\\n')
+    const url = 'https://github.com/Markbugwak/Retro-Photobooth/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body)
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setFeedbackError('')
+  }
+
   const allSlotsFilled = photos.length >= slots
 
   return (
@@ -573,6 +604,28 @@ export default function App() {
           </div>
         </section>
         <section className="closing-note" id="about"><span className="closing-star">✳</span><p>Some days deserve<br /><em>to be kept.</em></p><span className="closing-small">YOUR PHOTOS NEVER LEAVE THIS DEVICE.</span></section>
+        <section className="feedback-section" id="feedback" aria-labelledby="feedback-title">
+          <div className="feedback-heading">
+            <p className="eyebrow">✳ HELP US MAKE AFTERGLOW BETTER</p>
+            <h2 id="feedback-title">Your thoughts, <em>developed.</em></h2>
+            <p>Enjoyed your little photo session? Something could work better? Leave a review or tell us what you’d love to see next.</p>
+          </div>
+          <form className="feedback-form" onSubmit={submitFeedback}>
+            <div className="feedback-rating">
+              <span className="feedback-label" id="feedback-rating-label">HOW WAS YOUR EXPERIENCE?</span>
+              <div className="rating-stars" role="group" aria-labelledby="feedback-rating-label">
+                {[1, 2, 3, 4, 5].map(function (rating) { return <button type="button" key={rating} className={rating <= feedbackRating ? 'rating-star active' : 'rating-star'} onClick={function () { setFeedbackRating(rating) }} aria-label={rating + ' out of 5 stars'} aria-pressed={feedbackRating === rating}>★</button> })}
+                <span className="rating-caption">{feedbackRating}/5</span>
+              </div>
+            </div>
+            <label className="feedback-field"><span className="feedback-label">WHAT WOULD YOU LIKE TO SHARE?</span><select value={feedbackType} onChange={function (event) { setFeedbackType(event.target.value) }}><option>Review</option><option>Suggestion</option><option>Bug report</option><option>Feature request</option></select></label>
+            <label className="feedback-field"><span className="feedback-label">YOUR REVIEW OR IDEA</span><textarea value={feedbackMessage} onChange={function (event) { setFeedbackMessage(event.target.value); if (event.target.value.trim()) setFeedbackError('') }} rows="5" maxLength="2000" placeholder="What did you like? What felt confusing? What feature should we add next?" required /><span className="feedback-counter">{feedbackMessage.length}/2000</span></label>
+            <label className="feedback-field"><span className="feedback-label">NAME <span>(OPTIONAL)</span></span><input value={feedbackName} onChange={function (event) { setFeedbackName(event.target.value) }} maxLength="60" placeholder="Anonymous is totally okay" /></label>
+            {feedbackError && <p className="feedback-error" role="alert">{feedbackError}</p>}
+            <button className="primary-button feedback-submit" type="submit">SHARE YOUR FEEDBACK <span>↗</span></button>
+            <p className="feedback-privacy">Your feedback opens a prefilled GitHub issue so you can review it before posting. Feedback posted there is public and requires a GitHub account.</p>
+          </form>
+        </section>
       </main>
       <footer className="footer"><a href="#top" className="brand"><span className="brand-mark">a.</span><span>AFTERGLOW <small>ANALOG PHOTO CLUB</small></span></a><span>MADE OF MOMENTS, KEPT FOREVER.</span><a href="#top">BACK TO THE TOP ↑</a></footer>
     </div>
