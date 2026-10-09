@@ -273,3 +273,6 @@
   .rating-star{width:35px;height:39px}
   .feedback-field select,.feedback-field textarea,.feedback-field input{font-size:16px}
 }
+
+.feedback-success{color:#a8d9b4;font-size:12px;line-height:1.6;margin:0;padding:12px 14px;border:1px solid #a8d9b44d;border-radius:8px;background:#a8d9b40d}
+.feedback-submit:disabled{opacity:.7;cursor:wait}
