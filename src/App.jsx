@@ -128,11 +128,37 @@ export default function App() {
         video: { facingMode: { ideal: selectedMode }, width: { ideal: 1280 }, height: { ideal: 960 } }
       })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play().catch(function () {})
-      }
+      const video = videoRef.current
+      if (!video) throw new Error('Camera preview is not ready.')
+      video.srcObject = stream
+      video.muted = true
+      video.playsInline = true
       setCameraOn(true)
+      await new Promise(function (resolve, reject) {
+        if (video.readyState >= 2) {
+          resolve()
+          return
+        }
+        const onReady = function () {
+          cleanup()
+          resolve()
+        }
+        const onError = function () {
+          cleanup()
+          reject(new Error('The camera preview could not load.'))
+        }
+        const cleanup = function () {
+          video.removeEventListener('loadedmetadata', onReady)
+          video.removeEventListener('error', onError)
+        }
+        video.addEventListener('loadedmetadata', onReady, { once: true })
+        video.addEventListener('error', onError, { once: true })
+        if (video.readyState >= 1 && video.videoWidth) {
+          cleanup()
+          resolve()
+        }
+      })
+      await video.play()
       setFacing(selectedMode)
       setCameraError('')
       if (navigator.mediaDevices.enumerateDevices) {
@@ -140,6 +166,10 @@ export default function App() {
         setCameraChoices(devices.filter(function (device) { return device.kind === 'videoinput' }).length)
       }
     } catch (error) {
+      if (streamRef.current) streamRef.current.getTracks().forEach(function (track) { track.stop() })
+      streamRef.current = null
+      if (videoRef.current) videoRef.current.srcObject = null
+      setCameraOn(false)
       const name = error && error.name
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         setCameraError('Camera permission was denied. Allow camera access in your browser’s site settings, then tap Retry.')
