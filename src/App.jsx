@@ -235,7 +235,15 @@ export default function App() {
   }, [facing, filter, later, mirrorSaved, slots])
 
   const runSequence = useCallback(function (remaining) {
-    if (!streamRef.current || captureLockRef.current) return
+    // startCapture owns the capture lock for the entire sequence, so do not
+    // reject the sequence merely because that lock is already active.
+    if (!streamRef.current) {
+      captureLockRef.current = false
+      setShooting(false)
+      setCountdown(null)
+      setNotice('Camera disconnected before the photo was captured. Turn it on and try again.')
+      return
+    }
     if (remaining <= 0) {
       captureLockRef.current = false
       setShooting(false)
@@ -263,8 +271,10 @@ export default function App() {
           if (!photoTaken) {
             captureLockRef.current = false
             setShooting(false)
+            setNotice('The camera frame is not ready yet. Please wait for the live preview, then try again.')
             return
           }
+          setNotice('Photo captured!');
           const nextRemaining = remaining - 1
           if (autoSequence && nextRemaining > 0) {
             later(function () { runSequence(nextRemaining) }, 950)
