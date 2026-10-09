@@ -93,6 +93,7 @@ export default function App() {
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackName, setFeedbackName] = useState('')
   const [feedbackError, setFeedbackError] = useState('')
+  const [feedbackStatus, setFeedbackStatus] = useState('idle')
 
   const clearTimers = useCallback(function () {
     timersRef.current.forEach(function (timer) { window.clearTimeout(timer) })
@@ -467,30 +468,46 @@ export default function App() {
     if (start && !cameraOn) later(function () { startCamera() }, 350)
   }
 
-  const submitFeedback = function (event) {
+  const submitFeedback = async function (event) {
     event.preventDefault()
     const message = feedbackMessage.trim()
     if (!message) {
       setFeedbackError('Please share a review or suggestion before sending.')
       return
     }
-    const title = '[' + feedbackType + '] Afterglow photobooth feedback'
-    const body = [
-      '## Afterglow user feedback',
-      '',
-      '- Type: ' + feedbackType,
-      '- Rating: ' + feedbackRating + '/5',
-      '- Name (optional): ' + (feedbackName.trim() || 'Anonymous'),
-      '',
-      '## Review or suggestion',
-      message,
-      '',
-      '## Context',
-      'Please describe any issue or idea that could improve the photobooth.'
-    ].join('\\n')
-    const url = 'https://github.com/Markbugwak/Retro-Photobooth/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body)
-    window.open(url, '_blank', 'noopener,noreferrer')
+
     setFeedbackError('')
+    setFeedbackStatus('sending')
+
+    const formData = new FormData()
+    formData.append('feedback_type', feedbackType)
+    formData.append('rating', feedbackRating + '/5')
+    formData.append('name', feedbackName.trim() || 'Anonymous')
+    formData.append('message', message)
+    formData.append('_subject', '[Afterglow] ' + feedbackType + ' (' + feedbackRating + '/5)')
+    formData.append('_source', 'Afterglow Photobooth')
+
+    try {
+      const response = await fetch('https://formspree.io/f/xgaokjqv', {
+        method: 'POST',
+        body: formData,
+        headers: { Accept: 'application/json' }
+      })
+      if (!response.ok) {
+        let details = null
+        try { details = await response.json() } catch (_) {}
+        const reason = details && Array.isArray(details.errors) && details.errors[0] && details.errors[0].message
+        throw new Error(reason || 'We could not send your feedback. Please try again in a moment.')
+      }
+      setFeedbackStatus('success')
+      setFeedbackMessage('')
+      setFeedbackName('')
+      setFeedbackRating(5)
+      setFeedbackType('Suggestion')
+    } catch (error) {
+      setFeedbackStatus('error')
+      setFeedbackError(error.message || 'Something went wrong while sending your feedback. Please try again.')
+    }
   }
 
   const allSlotsFilled = photos.length >= slots
@@ -622,8 +639,9 @@ export default function App() {
             <label className="feedback-field"><span className="feedback-label">YOUR REVIEW OR IDEA</span><textarea value={feedbackMessage} onChange={function (event) { setFeedbackMessage(event.target.value); if (event.target.value.trim()) setFeedbackError('') }} rows="5" maxLength="2000" placeholder="What did you like? What felt confusing? What feature should we add next?" required /><span className="feedback-counter">{feedbackMessage.length}/2000</span></label>
             <label className="feedback-field"><span className="feedback-label">NAME <span>(OPTIONAL)</span></span><input value={feedbackName} onChange={function (event) { setFeedbackName(event.target.value) }} maxLength="60" placeholder="Anonymous is totally okay" /></label>
             {feedbackError && <p className="feedback-error" role="alert">{feedbackError}</p>}
-            <button className="primary-button feedback-submit" type="submit">SHARE YOUR FEEDBACK <span>↗</span></button>
-            <p className="feedback-privacy">Your feedback opens a prefilled GitHub issue so you can review it before posting. Feedback posted there is public and requires a GitHub account.</p>
+            {feedbackStatus === 'success' && <p className="feedback-success" role="status">Thank you for helping Afterglow glow brighter! Your feedback was sent successfully.</p>}
+            <button className="primary-button feedback-submit" type="submit" disabled={feedbackStatus === 'sending'}>{feedbackStatus === 'sending' ? 'SENDING FEEDBACK…' : 'SHARE YOUR FEEDBACK'} <span>{feedbackStatus === 'sending' ? '…' : '↗'}</span></button>
+            <p className="feedback-privacy">Your feedback is sent through Formspree to the Afterglow feedback inbox. Please don’t include private or sensitive information.</p>
           </form>
         </section>
       </main>
