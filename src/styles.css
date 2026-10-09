@@ -119,3 +119,116 @@
 .help-done{width:100%;margin-top:19px;justify-content:center}
 @media(max-width:700px){.section-heading{flex-wrap:wrap}.booth-help-button{margin-left:auto}.help-backdrop{padding:10px}.help-dialog{padding:26px 21px;max-height:92dvh}.help-steps li{grid-template-columns:28px 1fr;gap:8px}}
 @media(prefers-reduced-motion:reduce){.help-backdrop,.help-dialog{animation:none!important}}
+
+
+/* MOBILE LAYOUT PASS — keep the booth comfortable on narrow screens */
+@media(max-width:700px){
+  html{scroll-padding-top:68px}
+  body{min-width:320px}
+  .app-shell,main,.hero,.how-to-section,.booth-section,.booth-layout,.result-section,.result-layout{min-width:0;max-width:100%}
+  .topbar{gap:10px}
+  .brand{gap:7px;min-width:0;letter-spacing:.8px}
+  .brand>span:last-child{white-space:nowrap}
+  .top-cta{flex-shrink:0;min-height:42px;max-width:48%;white-space:nowrap}
+  .hero{overflow:hidden}
+  .hero h1{letter-spacing:-2.5px;overflow-wrap:normal}
+  .hero-description{max-width:34ch}
+  .hero-art{width:100%;min-width:0;overflow:hidden}
+  .hero-bottom{flex-wrap:wrap;row-gap:8px}
+  .how-to-section{padding-left:5%;padding-right:5%}
+  .how-to-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .how-to-step{min-width:0}
+  .how-to-footer{min-width:0}
+  .section-heading{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+  .section-heading>div{min-width:0;max-width:100%}
+  .section-heading h2,.result-heading h3{overflow-wrap:anywhere}
+  .section-note{margin:0}
+  .booth-help-button{margin:0;width:100%}
+  .camera-card,.control-panel{min-width:0}
+  .card-topline{align-items:flex-start;flex-wrap:wrap;line-height:1.5}
+  .card-topline span:last-child{max-width:100%;text-align:right}
+  .viewfinder{width:100%;aspect-ratio:4/3;max-height:none}
+  .camera-placeholder{padding:16px}
+  .camera-placeholder p{font-size:clamp(14px,4vw,17px)}
+  .camera-placeholder>span{font-size:9px;line-height:1.6}
+  .camera-actions{position:static;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .camera-actions .camera-start,.camera-actions .shutter-button{width:100%;min-width:0}
+  .camera-actions .text-button{grid-column:1/-1;width:100%}
+  .camera-actions .icon-button{width:46px}
+  .capture-options{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .capture-options label{justify-content:space-between;flex-wrap:wrap;min-width:0}
+  .capture-options select{max-width:58%;min-width:120px;min-height:40px}
+  .capture-options .toggle-option{justify-content:flex-start;line-height:1.5}
+  .control-panel{padding:16px 13px}
+  .control-title{align-items:flex-start;line-height:1.5}
+  .control-title span:last-child{text-align:right}
+  .choice-row{gap:6px}
+  .choice{min-width:0;padding:9px 2px;font-size:clamp(9px,2.8vw,10px);overflow-wrap:anywhere}
+  .filter-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 8px}
+  .filter-choice{min-width:0}
+  .filter-swatch{height:clamp(46px,14vw,60px)}
+  .frame-options{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .frame-choice{min-width:0;font-size:9px}
+  .frame-swatch{width:100%;max-width:57px}
+  .caption-group input{min-width:0;font-size:16px}
+  .result-heading{display:flex;flex-wrap:wrap;align-items:flex-end}
+  .result-heading>div{min-width:0}
+  .result-count{margin-left:auto}
+  .result-layout{min-width:0}
+  .strip-stage{min-width:0;width:100%;overflow:hidden}
+  .photo-strip{max-width:100%}
+  .download-card{min-width:0;padding:22px 18px}
+  .download-card h4{font-size:clamp(27px,8vw,31px)}
+  .download-button{min-height:48px}
+  .closing-note::before{left:-28px}
+  .closing-note::after{right:-28px}
+  .footer{gap:12px}
+  .footer .brand{max-width:70%}
+  .footer>a:last-child{margin-left:auto;text-align:right}
+  .help-backdrop{align-items:flex-start;overflow-y:auto;padding: max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+  .help-dialog{width:100%;margin:auto 0;max-height:calc(100dvh - 20px);padding:24px 18px}
+}
+@media(max-width:420px){
+  .topbar{padding-inline:12px;gap:8px}
+  .brand{font-size:9px;letter-spacing:.5px}
+  .brand-mark{width:29px;height:32px;font-size:25px}
+  .brand small{font-size:8px;letter-spacing:.5px}
+  .top-cta{font-size:9px;padding:10px 8px;letter-spacing:0}
+  .hero{padding-inline:18px}
+  .hero h1{font-size:clamp(58px,15.5vw,68px);letter-spacing:-2px}
+  .hero-art{min-height:215px}
+  .sun-stamp{left:2%;width:64px;height:64px;font-size:8px}
+  .scribble-note{right:1%;font-size:14px}
+  .hero-bottom{font-size:8px;letter-spacing:0}
+  .booth-section{padding-inline:12px}
+  .how-to-section{padding-inline:14px}
+  .how-to-grid{gap:8px}
+  .how-to-step{padding:14px 11px;min-height:0}
+  .how-to-step h3{font-size:18px}
+  .how-to-step p{font-size:11px;line-height:1.65}
+  .how-to-icon{margin-bottom:13px}
+  .camera-card{padding:10px}
+  .card-topline{font-size:9px}
+  .viewfinder-label{left:12px;top:12px;font-size:9px}
+  .viewfinder-counter{right:12px;bottom:12px}
+  .camera-actions .primary-button{font-size:9px;letter-spacing:0;padding:12px 7px}
+  .control-panel{padding:15px 10px}
+  .control-title{font-size:9px;gap:6px}
+  .filter-choice{font-size:10px}
+  .frame-swatch{padding:6px 4px}
+  .result-heading h3{font-size:clamp(34px,9vw,42px)}
+  .result-count{font-size:8px}
+  .strip-stage{padding:18px 10px;min-height:260px}
+  .photo-strip{width:min(260px,100%)}
+  .download-card{padding:21px 15px}
+}
+@media(max-width:360px){
+  .top-cta{max-width:46%;font-size:8px}
+  .hero{padding-inline:14px}
+  .hero h1{font-size:57px}
+  .hero-bottom span:first-child{max-width:42%}
+  .choice{font-size:9px}
+  .help-dialog{padding:22px 15px}
+  .help-dialog h3{font-size:29px}
+  .help-steps li{grid-template-columns:25px minmax(0,1fr);gap:7px}
+}
