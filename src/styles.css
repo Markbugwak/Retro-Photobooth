@@ -276,3 +276,24 @@
 
 .feedback-success{color:#a8d9b4;font-size:12px;line-height:1.6;margin:0;padding:12px 14px;border:1px solid #a8d9b44d;border-radius:8px;background:#a8d9b40d}
 .feedback-submit:disabled{opacity:.7;cursor:wait}
+
+
+/* Client-requested framing refinement: gentle headroom and optional 2×2 keepsake layout */
+.live-video{object-fit:cover;object-position:center 42%}
+.camera-composition-guides{position:absolute;inset:12% 14%;z-index:1;pointer-events:none;opacity:.34;border:1px solid #f4ead455}
+.camera-composition-guides::before,.camera-composition-guides::after{content:"";position:absolute;background:#f4ead455}
+.camera-composition-guides::before{left:50%;top:0;bottom:0;width:1px}
+.camera-composition-guides::after{top:50%;left:0;right:0;height:1px}
+.camera-composition-guides i{position:absolute;left:0;right:0;height:1px;background:#f4ead425}
+.camera-composition-guides i:first-child{top:33.333%}
+.camera-composition-guides i:last-child{top:66.666%}
+.frame-choice:has(.frame-grid){border-color:#c66b4d}
+.frame-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;padding:5px;background:#f5f0e5;border:1px solid #d8cebb}
+.frame-grid i{display:block;aspect-ratio:1;background:#292720}
+.photo-strip[data-frame="grid"]{width:min(420px,100%);padding:12px;background:#f5f0e5;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;transform:none}
+.photo-strip[data-frame="grid"] .strip-photo{min-width:0;aspect-ratio:1;overflow:hidden;background:#d8cebb}
+.photo-strip[data-frame="grid"] .strip-photo img{width:100%;height:100%;object-fit:cover}
+.photo-strip[data-frame="grid"] .strip-photo .photo-index{top:7px;left:7px}
+.photo-strip[data-frame="grid"] .strip-caption{grid-column:1/-1;color:#37312a;padding:8px 3px 4px;margin:0;text-align:center;overflow-wrap:anywhere}
+.photo-strip[data-frame="grid"] .empty-strip{grid-column:1/-1;min-height:270px;color:#37312a}
+@media(max-width:420px){.photo-strip[data-frame="grid"]{width:100%;padding:8px;gap:6px}.camera-composition-guides{inset:12% 10%}}
