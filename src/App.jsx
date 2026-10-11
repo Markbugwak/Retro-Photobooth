@@ -11,6 +11,7 @@ const FRAMES = [
   { id: 'film', name: 'Film' },
   { id: 'polaroid', name: 'Polaroid' },
   { id: 'kraft', name: 'Kraft paper' },
+  { id: 'grid', name: '2×2 Grid' },
   { id: 'none', name: 'No frame' },
 ]
 
@@ -219,7 +220,7 @@ export default function App() {
       sx = (video.videoWidth - sw) / 2
     } else {
       sh = video.videoWidth / ratio
-      sy = (video.videoHeight - sh) / 2
+      sy = (video.videoHeight - sh) * 0.38
     }
     if (facing === 'user' && mirrorSaved) {
       ctx.translate(canvas.width, 0)
@@ -337,7 +338,7 @@ export default function App() {
           const ratio = 4 / 3, sourceRatio = video.videoWidth / video.videoHeight
           let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight
           if (sourceRatio > ratio) { sw = video.videoHeight * ratio; sx = (video.videoWidth - sw) / 2 }
-          else { sh = video.videoWidth / ratio; sy = (video.videoHeight - sh) / 2 }
+          else { sh = video.videoWidth / ratio; sy = (video.videoHeight - sh) * 0.38 }
           if (facing === 'user' && mirrorSaved) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1) }
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
           const src = filterImageData(canvas, filter)
@@ -368,17 +369,20 @@ export default function App() {
 
   const downloadStrip = function (type) {
     if (!photos.length) return
+    const isGrid = frame === 'grid'
     const width = 720
     const pad = frame === 'polaroid' ? 28 : frame === 'none' ? 0 : 34
-    const gap = 12
-    const photoWidth = width - pad * 2
-    const photoHeight = Math.round(photoWidth * 3 / 4)
-    const captionHeight = caption.trim() ? 74 : 20
-    const height = pad * 2 + photos.length * photoHeight + (photos.length - 1) * gap + captionHeight
+    const gap = isGrid ? 14 : 12
+    const photoWidth = isGrid ? (width - pad * 2 - gap) / 2 : width - pad * 2
+    const photoHeight = isGrid ? photoWidth : Math.round(photoWidth * 3 / 4)
+    const captionHeight = caption.trim() ? (isGrid ? 76 : 74) : (isGrid ? 28 : 20)
+    const height = isGrid
+      ? pad * 2 + photoHeight * 2 + gap + captionHeight
+      : pad * 2 + photos.length * photoHeight + (photos.length - 1) * gap + captionHeight
     const canvas = document.createElement('canvas')
     canvas.width = width; canvas.height = height
     const ctx = canvas.getContext('2d')
-    const backgrounds = { film: '#25231e', polaroid: '#f5f0e5', kraft: '#c3a57e', none: '#25231e' }
+    const backgrounds = { film: '#25231e', polaroid: '#f5f0e5', kraft: '#c3a57e', grid: '#f5f0e5', none: '#25231e' }
     ctx.fillStyle = backgrounds[frame]
     ctx.fillRect(0, 0, width, height)
     const drawPhoto = function (index) {
@@ -387,7 +391,7 @@ export default function App() {
           ctx.fillStyle = frame === 'film' || frame === 'none' ? '#e8dfc9' : '#37312a'
           ctx.textAlign = 'center'
           ctx.font = '500 18px monospace'
-          ctx.fillText(caption.trim().slice(0, 48), width / 2, height - 30, width - 30)
+          ctx.fillText(caption.trim().slice(0, 48), width / 2, height - (frame === 'film' ? 30 : 26), width - 30)
         }
         if (frame === 'film') {
           ctx.fillStyle = '#e8dfc9'
@@ -399,14 +403,22 @@ export default function App() {
         link.download = 'afterglow-photobooth.' + type
         link.href = canvas.toDataURL(type === 'jpeg' ? 'image/jpeg' : 'image/png', 0.95)
         link.click()
-        setNotice('Your strip is ready to keep.')
+        setNotice(isGrid ? 'Your 2×2 keepsake is ready to keep.' : 'Your strip is ready to keep.')
         return
       }
       const photo = photos[index]
       const img = new Image()
       img.onload = function () {
-        const y = pad + index * (photoHeight + gap)
-        ctx.drawImage(img, pad, y, photoWidth, photoHeight)
+        let x, y
+        if (isGrid) {
+          x = pad + (index % 2) * (photoWidth + gap)
+          y = pad + Math.floor(index / 2) * (photoHeight + gap)
+          fitCover(ctx, img, x, y, photoWidth, photoHeight)
+        } else {
+          x = pad
+          y = pad + index * (photoHeight + gap)
+          ctx.drawImage(img, x, y, photoWidth, photoHeight)
+        }
         if (frame === 'film') {
           ctx.fillStyle = '#e8dfc9'
           const hole = 6, step = 32
@@ -431,9 +443,11 @@ export default function App() {
     }
     const type = downloadType === 'jpeg' ? 'image/jpeg' : 'image/png'
     const canvas = document.createElement('canvas')
-    const width = 720, pad = frame === 'none' ? 0 : 30, gap = 12, photoWidth = width - pad * 2
-    const photoHeight = Math.round(photoWidth * 3 / 4)
-    canvas.width = width; canvas.height = pad * 2 + photos.length * photoHeight + Math.max(0, photos.length - 1) * gap + 70
+    const isGrid = frame === 'grid'
+    const width = 720, pad = frame === 'none' ? 0 : 30, gap = isGrid ? 14 : 12
+    const photoWidth = isGrid ? (width - pad * 2 - gap) / 2 : width - pad * 2
+    const photoHeight = isGrid ? photoWidth : Math.round(photoWidth * 3 / 4)
+    canvas.width = width; canvas.height = isGrid ? pad * 2 + photoHeight * 2 + gap + 76 : pad * 2 + photos.length * photoHeight + Math.max(0, photos.length - 1) * gap + 70
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = frame === 'polaroid' ? '#f5f0e5' : frame === 'kraft' ? '#c3a57e' : '#25231e'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -455,7 +469,8 @@ export default function App() {
       }
       const img = new Image()
       img.onload = function () {
-        ctx.drawImage(img, pad, pad + index * (photoHeight + gap), photoWidth, photoHeight)
+        if (isGrid) fitCover(ctx, img, pad + (index % 2) * (photoWidth + gap), pad + Math.floor(index / 2) * (photoHeight + gap), photoWidth, photoHeight)
+        else ctx.drawImage(img, pad, pad + index * (photoHeight + gap), photoWidth, photoHeight)
         index++; drawNext()
       }
       img.src = photos[index].src
@@ -577,7 +592,7 @@ export default function App() {
               <div className="viewfinder">
                 <video ref={videoRef} autoPlay playsInline muted className={'live-video ' + (facing === 'user' ? 'mirror' : '')} style={{ display: cameraOn ? 'block' : 'none', filter: filter === 'mono' ? 'grayscale(1) contrast(1.08)' : filter === 'vintage' ? 'sepia(.38) contrast(.92) saturate(.82)' : filter === 'golden' ? 'sepia(.22) saturate(1.35) hue-rotate(-8deg) brightness(1.04)' : filter === 'blue' ? 'saturate(.8) hue-rotate(160deg) contrast(1.04)' : 'none' }} />
                 {!cameraOn && <div className="camera-placeholder"><div className="placeholder-camera">◎</div><p>YOUR NEXT FAVORITE PHOTO<br />STARTS RIGHT HERE.</p><span>ALLOW CAMERA ACCESS TO BEGIN</span></div>}
-                <div className="viewfinder-corners"><i/><i/><i/><i/></div><div className="viewfinder-label">AFTERGLOW / LIVE VIEW</div><div className="viewfinder-counter">{String(photos.length).padStart(2, '0')} <span>/ {String(slots).padStart(2, '0')}</span></div>
+                <div className="viewfinder-corners"><i/><i/><i/><i/></div><div className="camera-composition-guides" aria-hidden="true"><i/><i/></div><div className="viewfinder-label">AFTERGLOW / LIVE VIEW</div><div className="viewfinder-counter">{String(photos.length).padStart(2, '0')} <span>/ {String(slots).padStart(2, '0')}</span></div>
                 {flash && <div className="capture-flash" aria-hidden="true" />}
                 {countdown !== null && <div className="countdown-overlay" aria-live="assertive" aria-atomic="true">{typeof countdown === 'number' ? countdown : <span className="smile-text">{countdown}</span>}<button className="cancel-countdown" onClick={cancelCapture}>CANCEL</button></div>}
               </div>
