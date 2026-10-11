@@ -97,9 +97,10 @@
 
 
 /* In-booth quick help dialog */
-.booth-help-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;flex-shrink:0;border:1px solid #c66b4d70;background:transparent;color:var(--ink,#292720);padding:10px 13px;min-height:42px;font:10px var(--mono);letter-spacing:.5px;transition:background .2s,color .2s,transform .2s}
-.booth-help-button>span{display:grid;place-items:center;width:20px;height:20px;border:1px solid currentColor;border-radius:50%;font:500 13px 'DM Sans',sans-serif}
-.booth-help-button:hover{background:#c66b4d;color:#fff8ec;transform:translateY(-2px)}
+.booth-help-button{display:inline-grid;place-items:center;flex:0 0 40px;width:40px;height:40px;min-height:40px;padding:0;border:0;background:transparent;color:var(--rust);font-size:0;transition:color .2s,transform .2s}
+.booth-help-button>span{display:grid;place-items:center;width:25px;height:25px;border:1.5px solid currentColor;border-radius:50%;font:500 16px 'DM Sans',sans-serif;transition:background .2s,color .2s}
+.booth-help-button:hover{color:#e6a083;transform:translateY(-2px)}
+.booth-help-button:hover>span{background:var(--rust);color:#fff8ec}
 .help-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:#171510b8;backdrop-filter:blur(6px);animation:ag-rise-in .18s ease both}
 .help-dialog{position:relative;width:min(100%,560px);max-height:min(90dvh,820px);overflow:auto;background:#eee6d7;color:#292720;padding:clamp(23px,5vw,42px);box-shadow:0 24px 90px #0005;border:1px solid #ffffff80;animation:ag-film-reveal .28s cubic-bezier(.2,.75,.25,1) both}
 .help-close{position:absolute;right:15px;top:12px;width:38px;height:38px;border:1px solid #29272025;background:transparent;color:#292720;font-size:27px;line-height:1;transition:transform .2s,background .2s}
@@ -143,7 +144,7 @@
   .section-heading>div{min-width:0;max-width:100%}
   .section-heading h2,.result-heading h3{overflow-wrap:anywhere}
   .section-note{margin:0}
-  .booth-help-button{margin:0;width:100%}
+  .booth-help-button{margin:0;width:40px;flex-basis:40px;align-self:flex-start}
   .camera-card,.control-panel{min-width:0}
   .card-topline{align-items:flex-start;flex-wrap:wrap;line-height:1.5}
   .card-topline span:last-child{max-width:100%;text-align:right}
