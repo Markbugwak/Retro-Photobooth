@@ -220,7 +220,7 @@ export default function App() {
       sx = (video.videoWidth - sw) / 2
     } else {
       sh = video.videoWidth / ratio
-      sy = (video.videoHeight - sh) * 0.38
+      sy = (video.videoHeight - sh) * (window.matchMedia('(max-width: 700px)').matches ? 0.5 : 0.38)
     }
     if (facing === 'user' && mirrorSaved) {
       ctx.translate(canvas.width, 0)
@@ -338,7 +338,7 @@ export default function App() {
           const ratio = 4 / 3, sourceRatio = video.videoWidth / video.videoHeight
           let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight
           if (sourceRatio > ratio) { sw = video.videoHeight * ratio; sx = (video.videoWidth - sw) / 2 }
-          else { sh = video.videoWidth / ratio; sy = (video.videoHeight - sh) * 0.38 }
+          else { sh = video.videoWidth / ratio; sy = (video.videoHeight - sh) * (window.matchMedia('(max-width: 700px)').matches ? 0.5 : 0.38) }
           if (facing === 'user' && mirrorSaved) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1) }
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
           const src = filterImageData(canvas, filter)
