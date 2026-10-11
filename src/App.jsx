@@ -568,7 +568,7 @@ export default function App() {
         </section>
 
         <section className="booth-section" id="booth">
-          <div className="section-heading"><div><p className="eyebrow">✳ YOUR VERY OWN LITTLE PHOTO STUDIO</p><h2>Come on in<span>.</span></h2></div><p className="section-note">Find the light. Gather your people.<br />The best photos are never planned.</p><button className="booth-help-button" onClick={function () { setHelpOpen(true) }} aria-haspopup="dialog" aria-expanded={helpOpen}><span>?</span> HOW TO USE</button></div>
+          <div className="section-heading"><div><p className="eyebrow">✳ YOUR VERY OWN LITTLE PHOTO STUDIO</p><h2>Come on in<span>.</span></h2></div><p className="section-note">Find the light. Gather your people.<br />The best photos are never planned.</p><button className="booth-help-button" onClick={function () { setHelpOpen(true) }} aria-label="How to use" title="How to use" aria-haspopup="dialog" aria-expanded={helpOpen}><span aria-hidden="true">?</span></button></div>
           {helpOpen && <div className="help-backdrop" onClick={function (event) { if (event.target === event.currentTarget) setHelpOpen(false) }}>
             <section className="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
               <button className="help-close" onClick={function () { setHelpOpen(false) }} aria-label="Close help guide">×</button>
