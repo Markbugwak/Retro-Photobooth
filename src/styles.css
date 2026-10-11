@@ -303,3 +303,22 @@
 @media(max-width:700px){
   .live-video{object-position:center 50%}
 }
+
+
+/* GIF booth mode — warm paper, ink, and rust accents from the existing Afterglow palette */
+.booth-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 14px;padding:5px;border:1px solid var(--line);background:#29272008}
+.booth-mode-choice{min-height:42px;padding:11px 9px;border:1px solid transparent;background:transparent;color:var(--muted);font:10px var(--mono);letter-spacing:.5px;transition:background .2s,color .2s,border-color .2s}
+.booth-mode-choice.active{background:#292720;color:#eee6d7;border-color:#292720}
+.booth-mode-choice:disabled{opacity:.65;cursor:not-allowed}
+.gif-capture-button .shutter-icon{color:var(--rust)}
+.gif-booth-panel{margin-top:16px;padding:17px;background:#e5dccb;border:1px solid #2927201c;color:#292720}
+.gif-booth-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font:10px var(--mono);letter-spacing:.5px;color:#b65f43}
+.gif-booth-panel>p{margin:10px 0 0;font-size:12px;line-height:1.7;color:#655c4e}
+.gif-progress{height:3px;margin-top:13px;background:#29272018;overflow:hidden}
+.gif-progress span{display:block;height:100%;background:#c66b4d;transition:width .18s linear}
+.gif-preview-card{margin-top:16px;padding-top:15px;border-top:1px solid #29272020}
+.gif-preview-card img{display:block;width:100%;max-height:420px;object-fit:contain;background:#24231f;image-rendering:auto}
+.gif-preview-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+.gif-download-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:11px 13px;text-decoration:none;font:10px var(--mono);letter-spacing:.4px}
+.gif-preview-actions .text-button{color:#655c4e}
+@media(max-width:520px){.booth-mode-choice{font-size:9px;padding-inline:5px}.gif-booth-panel{padding:14px}.gif-preview-actions{align-items:stretch;flex-direction:column}.gif-download-button{width:100%}}
