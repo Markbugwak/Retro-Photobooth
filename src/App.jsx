@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { encodeGif } from './gifEncoder.js'
 
 const FILTERS = [
   { id: 'original', name: 'Original' },
@@ -70,7 +71,15 @@ export default function App() {
   const streamRef = useRef(null)
   const timersRef = useRef([])
   const captureLockRef = useRef(false)
+  const gifIntervalRef = useRef(null)
+  const gifTimeoutRef = useRef(null)
+  const gifFramesRef = useRef([])
+  const gifUrlRef = useRef(null)
   const [cameraOn, setCameraOn] = useState(false)
+  const [boothMode, setBoothMode] = useState('photo')
+  const [gifRecording, setGifRecording] = useState(false)
+  const [gifFrameCount, setGifFrameCount] = useState(0)
+  const [gifUrl, setGifUrl] = useState('')
   const [cameraError, setCameraError] = useState('')
   const [photos, setPhotos] = useState([])
   const [slots, setSlots] = useState(4)
@@ -113,12 +122,87 @@ export default function App() {
     return id
   }, [])
 
+  const clearGifCapture = useCallback(function () {
+    if (gifIntervalRef.current) window.clearInterval(gifIntervalRef.current)
+    if (gifTimeoutRef.current) window.clearTimeout(gifTimeoutRef.current)
+    gifIntervalRef.current = null
+    gifTimeoutRef.current = null
+    setGifRecording(false)
+  }, [])
+
+  const startGifCapture = useCallback(function () {
+    const video = videoRef.current
+    if (!cameraOn || !streamRef.current || !video || !video.videoWidth || gifRecording) return
+    clearGifCapture()
+    gifFramesRef.current = []
+    setGifFrameCount(0)
+    setNotice('Hold your pose! Capturing a short looping memory…')
+    setGifRecording(true)
+
+    const captureFrame = function () {
+      const liveVideo = videoRef.current
+      if (!liveVideo || !liveVideo.videoWidth || !streamRef.current) return
+      const width = 320, height = 240
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      const ratio = width / height
+      const sourceRatio = liveVideo.videoWidth / liveVideo.videoHeight
+      let sx = 0, sy = 0, sw = liveVideo.videoWidth, sh = liveVideo.videoHeight
+      if (sourceRatio > ratio) {
+        sw = liveVideo.videoHeight * ratio
+        sx = (liveVideo.videoWidth - sw) / 2
+      } else {
+        sh = liveVideo.videoWidth / ratio
+        sy = (liveVideo.videoHeight - sh) * (window.matchMedia('(max-width: 700px)').matches ? 0.5 : 0.38)
+      }
+      if (facing === 'user' && mirrorSaved) {
+        ctx.translate(width, 0)
+        ctx.scale(-1, 1)
+      }
+      ctx.drawImage(liveVideo, sx, sy, sw, sh, 0, 0, width, height)
+      let pixels = ctx.getImageData(0, 0, width, height)
+      if (filter !== 'original') pixels = applyFilter(pixels, filter)
+      gifFramesRef.current.push(new Uint8Array(pixels.data))
+      setGifFrameCount(gifFramesRef.current.length)
+    }
+
+    captureFrame()
+    gifIntervalRef.current = window.setInterval(captureFrame, 180)
+    gifTimeoutRef.current = window.setTimeout(function () {
+      clearGifCapture()
+      const frames = gifFramesRef.current
+      if (frames.length < 2) {
+        setNotice('The camera frame was not ready. Please try your GIF again.')
+        return
+      }
+      try {
+        const blob = encodeGif(frames, 320, 240, 18)
+        const url = URL.createObjectURL(blob)
+        if (gifUrlRef.current) URL.revokeObjectURL(gifUrlRef.current)
+        gifUrlRef.current = url
+        setGifUrl(url)
+        setNotice('Your looping memory is ready. Preview it or download your GIF.')
+      } catch (_) {
+        setNotice('We could not make that GIF. Please try again with fewer background apps open.')
+      }
+    }, 2340)
+  }, [cameraOn, clearGifCapture, facing, filter, gifRecording, mirrorSaved])
+
+  const chooseBoothMode = function (mode) {
+    if (gifRecording) return
+    setBoothMode(mode)
+    setNotice(mode === 'gif' ? 'GIF booth selected. Turn on your camera, then capture a short looping memory.' : 'Photo booth selected. Your photo-strip tools are ready.')
+  }
+
   const stopCamera = useCallback(function () {
     clearTimers()
+    clearGifCapture()
     if (streamRef.current) streamRef.current.getTracks().forEach(function (track) { track.stop() })
     streamRef.current = null
     setCameraOn(false)
-  }, [clearTimers])
+  }, [clearTimers, clearGifCapture])
 
   const startCamera = useCallback(async function (mode) {
     const selectedMode = mode || facing
@@ -195,6 +279,9 @@ export default function App() {
     return function () {
       timersRef.current.forEach(function (timer) { window.clearTimeout(timer) })
       if (streamRef.current) streamRef.current.getTracks().forEach(function (track) { track.stop() })
+      if (gifIntervalRef.current) window.clearInterval(gifIntervalRef.current)
+      if (gifTimeoutRef.current) window.clearTimeout(gifTimeoutRef.current)
+      if (gifUrlRef.current) URL.revokeObjectURL(gifUrlRef.current)
     }
   }, [])
 
@@ -589,25 +676,27 @@ export default function App() {
           <div className="booth-layout">
             <div className="camera-card">
               <div className="card-topline"><span><i className={cameraOn ? 'status-dot live' : 'status-dot'} /> {cameraOn ? 'CAMERA IS READY' : 'CAMERA STANDBY'}</span><span>YOUR PHOTOS STAY ON THIS DEVICE</span></div>
+              <div className="booth-mode-switch" role="group" aria-label="Choose booth mode"><button type="button" className={boothMode === 'photo' ? 'booth-mode-choice active' : 'booth-mode-choice'} aria-pressed={boothMode === 'photo'} disabled={gifRecording} onClick={function () { chooseBoothMode('photo') }}>▣ PHOTO BOOTH</button><button type="button" className={boothMode === 'gif' ? 'booth-mode-choice active' : 'booth-mode-choice'} aria-pressed={boothMode === 'gif'} disabled={gifRecording} onClick={function () { chooseBoothMode('gif') }}>↻ GIF BOOTH</button></div>
               <div className="viewfinder">
                 <video ref={videoRef} autoPlay playsInline muted className={'live-video ' + (facing === 'user' ? 'mirror' : '')} style={{ display: cameraOn ? 'block' : 'none', filter: filter === 'mono' ? 'grayscale(1) contrast(1.08)' : filter === 'vintage' ? 'sepia(.38) contrast(.92) saturate(.82)' : filter === 'golden' ? 'sepia(.22) saturate(1.35) hue-rotate(-8deg) brightness(1.04)' : filter === 'blue' ? 'saturate(.8) hue-rotate(160deg) contrast(1.04)' : 'none' }} />
                 {!cameraOn && <div className="camera-placeholder"><div className="placeholder-camera">◎</div><p>YOUR NEXT FAVORITE PHOTO<br />STARTS RIGHT HERE.</p><span>ALLOW CAMERA ACCESS TO BEGIN</span></div>}
-                <div className="viewfinder-corners"><i/><i/><i/><i/></div><div className="camera-composition-guides" aria-hidden="true"><i/><i/></div><div className="viewfinder-label">AFTERGLOW / LIVE VIEW</div><div className="viewfinder-counter">{String(photos.length).padStart(2, '0')} <span>/ {String(slots).padStart(2, '0')}</span></div>
+                <div className="viewfinder-corners"><i/><i/><i/><i/></div><div className="camera-composition-guides" aria-hidden="true"><i/><i/></div><div className="viewfinder-label">AFTERGLOW / LIVE VIEW</div><div className="viewfinder-counter">{boothMode === 'gif' ? <>{String(gifFrameCount).padStart(2, '0')} <span>/ 13 FRAMES</span></> : <>{String(photos.length).padStart(2, '0')} <span>/ {String(slots).padStart(2, '0')}</span></>}</div>
                 {flash && <div className="capture-flash" aria-hidden="true" />}
                 {countdown !== null && <div className="countdown-overlay" aria-live="assertive" aria-atomic="true">{typeof countdown === 'number' ? countdown : <span className="smile-text">{countdown}</span>}<button className="cancel-countdown" onClick={cancelCapture}>CANCEL</button></div>}
               </div>
               {cameraError && <div className="error-message" role="alert"><p>{cameraError}</p><button onClick={function () { startCamera(facing) }}>RETRY CAMERA</button><small>Tip: if this page is inside Instagram or Messenger, open it in Safari or Chrome.</small></div>}
               <div className="camera-actions">
-                {!cameraOn ? <button className="primary-button camera-start" onClick={function () { startCamera() }}>◎ &nbsp; TURN ON CAMERA</button> : <button className="primary-button shutter-button" onClick={startCapture} disabled={shooting || allSlotsFilled}><span className="shutter-icon">●</span>{allSlotsFilled ? 'YOUR STRIP IS READY' : shooting ? 'GET READY…' : autoSequence ? 'START PHOTO SEQUENCE' : 'TAKE A PHOTO'}</button>}
-                {cameraOn && cameraChoices > 1 && <button className="icon-button" title="Switch camera" aria-label="Switch camera" onClick={function () { startCamera(facing === 'user' ? 'environment' : 'user') }}>⇄</button>}
-                {cameraOn && <button className="text-button" onClick={stopCamera}>TURN OFF</button>}
+                {!cameraOn ? <button className="primary-button camera-start" onClick={function () { startCamera() }}>◎ &nbsp; TURN ON CAMERA</button> : boothMode === 'gif' ? <button className="primary-button shutter-button gif-capture-button" onClick={startGifCapture} disabled={gifRecording}><span className="shutter-icon">{gifRecording ? '◌' : '↻'}</span>{gifRecording ? 'CAPTURING GIF…' : 'CAPTURE A LOOPING GIF'}</button> : <button className="primary-button shutter-button" onClick={startCapture} disabled={shooting || allSlotsFilled}><span className="shutter-icon">●</span>{allSlotsFilled ? 'YOUR STRIP IS READY' : shooting ? 'GET READY…' : autoSequence ? 'START PHOTO SEQUENCE' : 'TAKE A PHOTO'}</button>}
+                {cameraOn && cameraChoices > 1 && <button className="icon-button" title="Switch camera" aria-label="Switch camera" disabled={gifRecording} onClick={function () { startCamera(facing === 'user' ? 'environment' : 'user') }}>⇄</button>}
+                {cameraOn && <button className="text-button" disabled={gifRecording} onClick={stopCamera}>TURN OFF</button>}
               </div>
-              <div className="capture-options"><label>COUNTDOWN<select value={timerSeconds} onChange={function (e) { setTimerSeconds(Number(e.target.value)) }}><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label><label className="toggle-option"><input type="checkbox" checked={autoSequence} onChange={function (e) { setAutoSequence(e.target.checked) }} /> Auto-take remaining photos</label></div>
-              <div className="camera-hint"><span>✳</span> TIP: YOU CAN RETAKE OR REMOVE ANY PHOTO BELOW.</div>
+              {boothMode === 'gif' && <div className="gif-booth-panel"><div className="gif-booth-meta"><span>{gifRecording ? '● CAPTURING / LIVE' : '✳ GIF MEMORY'}</span><span>2.3 SEC LOOP</span></div><p>Strike a pose, wave hello, or make a tiny dance. Your retro loop is created right here on this device.</p>{gifRecording && <div className="gif-progress"><span style={{ width: Math.min(100, gifFrameCount / 13 * 100) + '%' }} /></div>}{gifUrl && <div className="gif-preview-card"><img src={gifUrl} alt="Your animated retro photobooth GIF preview" /><div className="gif-preview-actions"><a className="primary-button gif-download-button" href={gifUrl} download="afterglow-photobooth.gif">DOWNLOAD GIF ↓</a><button type="button" className="text-button" onClick={function () { URL.revokeObjectURL(gifUrl); gifUrlRef.current = null; setGifUrl(''); setNotice('GIF deleted from this session.') }}>DELETE GIF</button></div></div>}</div>}
+              {boothMode === 'photo' && <div className="capture-options"><label>COUNTDOWN<select value={timerSeconds} onChange={function (e) { setTimerSeconds(Number(e.target.value)) }}><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label><label className="toggle-option"><input type="checkbox" checked={autoSequence} onChange={function (e) { setAutoSequence(e.target.checked) }} /> Auto-take remaining photos</label></div>
+              {boothMode === 'photo' && <div className="camera-hint"><span>✳</span> TIP: YOU CAN RETAKE OR REMOVE ANY PHOTO BELOW.</div>}
               {notice && <p className="notice-message" role="status">{notice}</p>}
             </div>
 
-            <aside className="control-panel">
+            {boothMode === 'photo' && <aside className="control-panel">
               <div className="panel-header"><span>MAKE IT YOURS</span><span className="panel-number">{photos.length} / {slots}</span></div>
               <div className="control-group"><div className="control-title"><span>PHOTO STRIP</span><span>CHOOSE A SIZE</span></div><div className="choice-row">{[2, 3, 4].map(function (count) { return <button key={count} aria-pressed={slots === count} className={slots === count ? 'choice active' : 'choice'} onClick={function () { chooseSlots(count) }}>{count} photos</button> })}</div></div>
               <div className="control-group"><div className="control-title"><span>FILM MOOD</span><span>CHOOSE YOUR TONE</span></div><div className="filter-grid">{FILTERS.map(function (item) { return <button key={item.id} aria-pressed={filter === item.id} className={filter === item.id ? 'filter-choice active' : 'filter-choice'} onClick={function () { setFilter(item.id) }}><span className={'filter-swatch swatch-' + item.id}><span>Ag</span></span><span>{item.name}</span></button> })}</div></div>
@@ -617,10 +706,10 @@ export default function App() {
               <div className="strip-progress"><div className="progress-copy"><span>YOUR PHOTOS</span><span>{photos.length} OF {slots}</span></div><div className="progress-track"><span style={{ width: Math.min(100, photos.length / slots * 100) + '%' }}/></div></div>
               <button className="reset-button" onClick={function () { setConfirmReset(true) }}>↺ &nbsp; START A FRESH ROLL</button>
               {confirmReset && <div className="confirm-reset"><p>Clear all {photos.length} photos and start over?</p><button onClick={resetPhotos}>YES, START OVER</button><button onClick={function () { setConfirmReset(false) }}>KEEP MY PHOTOS</button></div>}
-            </aside>
+            </aside>}
           </div>
 
-          <div className="result-section" id="keepsake">
+          {boothMode === 'photo' && <div className="result-section" id="keepsake">
             <div className="result-heading"><div><p className="eyebrow">✳ THE LITTLE THINGS, DEVELOPED</p><h3>{allSlotsFilled ? 'Your strip is ready' : 'Your keepsake'}<span>.</span></h3></div><span className="result-count">{photos.length} / {slots} PHOTOS</span></div>
             <div className="result-layout">
               <div className="strip-stage"><div className="photo-strip frame-preview" data-frame={frame}>
@@ -633,7 +722,7 @@ export default function App() {
                 <small>MADE WITH A LITTLE NOSTALGIA. STORED ON YOUR DEVICE.</small>
               </div>
             </div>
-          </div>
+          </div>}
         </section>
         <section className="closing-note" id="about"><span className="closing-star">✳</span><p>Some days deserve<br /><em>to be kept.</em></p><span className="closing-small">YOUR PHOTOS NEVER LEAVE THIS DEVICE.</span></section>
         <section className="feedback-section" id="feedback" aria-labelledby="feedback-title">
