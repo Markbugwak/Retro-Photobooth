@@ -297,3 +297,9 @@
 .photo-strip[data-frame="grid"] .strip-caption{grid-column:1/-1;color:#37312a;padding:8px 3px 4px;margin:0;text-align:center;overflow-wrap:anywhere}
 .photo-strip[data-frame="grid"] .empty-strip{grid-column:1/-1;min-height:270px;color:#37312a}
 @media(max-width:420px){.photo-strip[data-frame="grid"]{width:100%;padding:8px;gap:6px}.camera-composition-guides{inset:12% 10%}}
+
+
+/* Mobile-only camera framing: center the preview and match its saved-photo crop. */
+@media(max-width:700px){
+  .live-video{object-position:center 50%}
+}
