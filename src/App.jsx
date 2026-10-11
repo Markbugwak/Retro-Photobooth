@@ -134,6 +134,9 @@ export default function App() {
     const video = videoRef.current
     if (!cameraOn || !streamRef.current || !video || !video.videoWidth || gifRecording) return
     clearGifCapture()
+    if (gifUrlRef.current) URL.revokeObjectURL(gifUrlRef.current)
+    gifUrlRef.current = null
+    setGifUrl('')
     gifFramesRef.current = []
     setGifFrameCount(0)
     setNotice('Hold your pose! Capturing a short looping memory…')
